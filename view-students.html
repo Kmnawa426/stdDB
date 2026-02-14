@@ -15,12 +15,12 @@
 
     h2 {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
 
     .top-btn {
       display: block;
-      margin: 0 auto 30px auto;
+      margin: 0 auto 15px auto;
       padding: 10px 20px;
       border: none;
       border-radius: 8px;
@@ -28,6 +28,17 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+    }
+
+    .search-box {
+      width: 300px;
+      display: block;
+      margin: 0 auto 30px auto;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      outline: none;
     }
 
     .container {
@@ -76,6 +87,10 @@
 <h2>Students List</h2>
 <button class="top-btn" onclick="goBack()">Add New Student</button>
 
+<input type="text" id="searchInput" class="search-box"
+       placeholder="Search by Name or Room No..."
+       onkeyup="searchStudents()">
+
 <div class="container" id="studentsContainer"></div>
 
 <script>
@@ -83,16 +98,30 @@ const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
 const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
+let allStudents = [];
+
+// Fetch all students initially
 async function fetchStudents(){
   const { data } = await client
     .from("students")
     .select("*")
     .order("created_at", { ascending: true });
 
+  allStudents = data;
+  displayStudents(allStudents);
+}
+
+// Display students
+function displayStudents(students){
   const container = document.getElementById("studentsContainer");
   container.innerHTML = "";
 
-  data.forEach(student => {
+  if(students.length === 0){
+    container.innerHTML = "<h3>No students found</h3>";
+    return;
+  }
+
+  students.forEach(student => {
     const div = document.createElement("div");
     div.className = "student-card";
 
@@ -106,10 +135,24 @@ async function fetchStudents(){
       <p><b>Phone:</b> ${student.parent_phone1}</p>
       <button class="delete-btn" onclick="deleteStudent(${student.id})">Delete</button>
     `;
+
     container.appendChild(div);
   });
 }
 
+// Search Function
+window.searchStudents = function(){
+  const query = document.getElementById("searchInput").value.toLowerCase();
+
+  const filtered = allStudents.filter(student =>
+    student.name.toLowerCase().includes(query) ||
+    student.room_no.toLowerCase().includes(query)
+  );
+
+  displayStudents(filtered);
+}
+
+// Delete
 window.deleteStudent = async function(id){
   if(confirm("Delete this student?")){
     await client.from("students").delete().eq("id", id);
