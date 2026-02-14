@@ -3,8 +3,8 @@
 <head>
   <title>Add Student</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
 
+  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -12,7 +12,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      min-height: 100vh;
     }
 
     .card {
@@ -74,7 +74,6 @@
     .view-btn:hover {
       background: #1f8b99;
     }
-
   </style>
 </head>
 <body>
@@ -98,10 +97,10 @@
 
 <script>
 const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
-const supabaseKey = "YOUR_PUBLISHABLE_KEY_HERE";
+const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Image compression
+// Compress image
 function compressImage(file){
   return new Promise((resolve)=>{
     const reader = new FileReader();
@@ -126,7 +125,7 @@ function compressImage(file){
   });
 }
 
-// ADD STUDENT FUNCTION
+// Add student
 window.addStudent = async function() {
 
   const photoFile = document.getElementById("photo").files[0];
@@ -160,13 +159,10 @@ window.addStudent = async function() {
   }
 }
 
-function goToView(){
+window.goToView = function(){
   window.location.href = "view-students.html";
 }
 </script>
 
 </body>
 </html>
-
-
-
