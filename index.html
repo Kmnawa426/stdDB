@@ -105,6 +105,75 @@ function goToView(){
   window.location.href = "view-students.html";
 }
 </script>
+<script>
+const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
+const supabaseKey = "YOUR_PUBLISHABLE_KEY_HERE";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Image compression
+function compressImage(file){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = function(event){
+      const img = new Image();
+      img.onload = function(){
+        const canvas = document.createElement("canvas");
+        const maxWidth = 200;
+        const scaleSize = maxWidth / img.width;
+
+        canvas.width = maxWidth;
+        canvas.height = img.height * scaleSize;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.6));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ADD STUDENT FUNCTION
+window.addStudent = async function() {
+
+  const photoFile = document.getElementById("photo").files[0];
+
+  if(!photoFile){
+    alert("Please upload photo!");
+    return;
+  }
+
+  const photoBase64 = await compressImage(photoFile);
+
+  const { error } = await client.from("students").insert([{
+    name: document.getElementById("name").value,
+    class: document.getElementById("class").value,
+    room_no: document.getElementById("room_no").value,
+    address: document.getElementById("address").value,
+    parent_name: document.getElementById("parent_name").value,
+    parent_phone1: document.getElementById("parent_phone1").value,
+    parent_phone2: document.getElementById("parent_phone2").value,
+    student_phone: document.getElementById("student_phone").value,
+    photo_url: photoBase64,
+    status: "present"
+  }]);
+
+  if(error){
+    console.log(error);
+    alert("Error adding student");
+  } else {
+    alert("Student Added Successfully!");
+    document.querySelectorAll("input").forEach(i=>i.value="");
+  }
+}
+
+function goToView(){
+  window.location.href = "view-students.html";
+}
+</script>
 
 </body>
 </html>
+
