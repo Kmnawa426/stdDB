@@ -53,22 +53,11 @@ h2{text-align:center;color:white;}
   align-items:center;
   justify-content:center;
   font-size:40px;
-  position:relative;
 }
 .photo img{
   width:100%;
   height:100%;
   object-fit:cover;
-}
-.edit{
-  position:absolute;
-  bottom:0;
-  right:0;
-  background:#f6c23e;
-  border-radius:50%;
-  padding:5px;
-  font-size:14px;
-  cursor:pointer;
 }
 button{
   padding:8px;
@@ -78,6 +67,7 @@ button{
   margin-top:8px;
   cursor:pointer;
 }
+.change{background:#f6c23e;}
 .delete{background:#e74a3b;color:white;}
 .nav{background:#1cc88a;color:white;margin-top:20px;}
 </style>
@@ -115,33 +105,29 @@ function displayStudents(students){
     var div=document.createElement("div");
     div.className="card";
 
-    var imgSection = s.photo_url
+    var imgSection=s.photo_url
       ? '<img src="'+s.photo_url+'">'
       : '+';
 
     div.innerHTML=
       '<div class="hst">'+s.hst_number+'</div>'+
-      '<div class="photo" id="photo_'+s.id+'">'+
-        imgSection+
-        '<div class="edit">✏</div>'+
-      '</div>'+
+      '<div class="photo">'+imgSection+'</div>'+
       '<h3>'+s.name+'</h3>'+
       '<p>Class: '+s.class+'</p>'+
       '<p>Room: '+s.room_no+'</p>'+
       '<p>Parent1: '+s.parent_phone1+'</p>'+
       '<p>Parent2: '+s.parent_phone2+'</p>'+
       '<p>Student: '+s.student_phone+'</p>'+
+      '<button class="change">Change Picture</button>'+
       '<button class="delete">Delete</button>';
 
     (function(student){
-      // Delete
       div.querySelector(".delete").addEventListener("click",function(){
         deleteStudent(student.id,student.photo_url);
       });
 
-      // Edit image
-      div.querySelector(".edit").addEventListener("click",function(){
-        uploadNewImage(student);
+      div.querySelector(".change").addEventListener("click",function(){
+        changePicture(student);
       });
 
     })(s);
@@ -162,7 +148,7 @@ document.getElementById("search").addEventListener("input",function(){
   displayStudents(filtered);
 });
 
-async function uploadNewImage(student){
+async function changePicture(student){
 
   var input=document.createElement("input");
   input.type="file";
