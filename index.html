@@ -3,55 +3,40 @@
 <head>
   <title>Add Student</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #4e73df, #1cc88a);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      font-family: Arial;
+      background: linear-gradient(135deg,#4e73df,#1cc88a);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
-
-    .card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(15px);
-      padding: 30px;
-      border-radius: 20px;
-      width: 400px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-      color: white;
+    .card{
+      background:white;
+      padding:25px;
+      border-radius:12px;
+      width:350px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.2);
     }
-
-    h2 { text-align: center; }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
+    h2{text-align:center;}
+    input{
+      width:100%;
+      padding:8px;
+      margin-bottom:10px;
     }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: 0.3s;
+    button{
+      width:100%;
+      padding:10px;
+      margin-top:8px;
+      cursor:pointer;
+      border:none;
+      border-radius:6px;
+      font-weight:bold;
     }
-
-    .add-btn { background: #f6c23e; color: black; }
-    .add-btn:hover { background: #dda20a; }
-
-    .nav-btn { background: #36b9cc; color: white; }
-    .nav-btn:hover { background: #1f8b99; }
+    .add{background:#f6c23e;}
+    .view{background:#36b9cc;color:white;}
   </style>
 </head>
 <body>
@@ -59,16 +44,16 @@
 <div class="card">
   <h2>Add Student</h2>
 
-  <input type="text" id="name" placeholder="Student Name">
-  <input type="text" id="class" placeholder="Class">
-  <input type="text" id="room_no" placeholder="Room No">
-  <input type="text" id="address" placeholder="Address">
-  <input type="text" id="parent_name" placeholder="Parent Name">
-  <input type="text" id="parent_phone1" placeholder="Parent Phone">
-  <input type="file" id="photo" accept="image/*">
+  <input id="name" placeholder="Name">
+  <input id="class" placeholder="Class">
+  <input id="room_no" placeholder="Room No">
+  <input id="address" placeholder="Address">
+  <input id="parent_name" placeholder="Parent Name">
+  <input id="parent_phone1" placeholder="Contact Number">
+  <input type="file" id="photo">
 
-  <button class="add-btn" onclick="addStudent()">Add Student</button>
-  <button class="nav-btn" onclick="goToView()">Go To View Students</button>
+  <button class="add" onclick="addStudent()">Add Student</button>
+  <button class="view" onclick="location.href='view-students.html'">View Students</button>
 </div>
 
 <script>
@@ -76,55 +61,69 @@ const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
 const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
+async function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const ctx=canvas.getContext("2d");
+        const maxWidth=500;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        canvas.toBlob(blob=>resolve(blob),"image/jpeg",0.7);
+      };
+    };
+  });
+}
+
 window.addStudent = async function(){
 
-  const photoFile = document.getElementById("photo").files[0];
+  const photoFile=document.getElementById("photo").files[0];
 
   if(!photoFile){
     if(!confirm("No image selected. Continue without photo?")) return;
   }
 
-  const { data, error } = await client.from("students").insert([{
-    name: document.getElementById("name").value,
-    class: document.getElementById("class").value,
-    room_no: document.getElementById("room_no").value,
-    address: document.getElementById("address").value,
-    parent_name: document.getElementById("parent_name").value,
-    parent_phone1: document.getElementById("parent_phone1").value,
-    photo_url: null,
-    status: "present"
+  const {data,error}=await client.from("students").insert([{
+    name:name.value,
+    class:class.value,
+    room_no:room_no.value,
+    address:address.value,
+    parent_name:parent_name.value,
+    parent_phone1:parent_phone1.value,
+    photo_url:null,
+    status:"present"
   }]).select();
 
-  if(error){
-    alert("Error adding student");
-    return;
-  }
+  if(error){alert(error.message);return;}
 
-  // Upload image if exists
   if(photoFile){
-    const studentId = data[0].id;
-    const fileName = `student-${studentId}-${Date.now()}.jpg`;
+    const compressed=await compressImage(photoFile);
+    const fileName=`student-${data[0].id}-${Date.now()}.jpg`;
 
-    await client.storage
+    const {error:uploadError}=await client.storage
       .from("student-photos")
-      .upload(fileName, photoFile);
+      .upload(fileName,compressed);
 
-    const { data: urlData } = client.storage
+    if(uploadError){alert(uploadError.message);return;}
+
+    const {data:urlData}=client.storage
       .from("student-photos")
       .getPublicUrl(fileName);
 
-    await client
-      .from("students")
-      .update({ photo_url: urlData.publicUrl })
-      .eq("id", studentId);
+    await client.from("students")
+      .update({photo_url:urlData.publicUrl})
+      .eq("id",data[0].id);
   }
 
   alert("Student Added Successfully!");
   document.querySelectorAll("input").forEach(i=>i.value="");
-}
-
-window.goToView = function(){
-  window.location.href = "view-students.html";
 }
 </script>
 
