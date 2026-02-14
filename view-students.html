@@ -7,16 +7,13 @@
 
 <style>
 *{box-sizing:border-box;}
-
 body{
   margin:0;
   font-family:Arial;
   background:linear-gradient(135deg,#667eea,#764ba2);
   padding:15px;
 }
-
 h2{text-align:center;color:white;}
-
 #search{
   width:100%;
   max-width:400px;
@@ -26,13 +23,11 @@ h2{text-align:center;color:white;}
   border-radius:8px;
   border:none;
 }
-
 .container{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
   gap:15px;
 }
-
 .card{
   background:white;
   padding:15px;
@@ -40,7 +35,6 @@ h2{text-align:center;color:white;}
   position:relative;
   text-align:center;
 }
-
 .hst{
   position:absolute;
   top:10px;
@@ -48,7 +42,6 @@ h2{text-align:center;color:white;}
   font-weight:bold;
   color:#4e73df;
 }
-
 .photo{
   width:100px;
   height:100px;
@@ -61,13 +54,11 @@ h2{text-align:center;color:white;}
   justify-content:center;
   font-size:40px;
 }
-
 .photo img{
   width:100%;
   height:100%;
   object-fit:cover;
 }
-
 button{
   padding:8px;
   width:100%;
@@ -76,7 +67,6 @@ button{
   margin-top:8px;
   cursor:pointer;
 }
-
 .delete{background:#e74a3b;color:white;}
 .nav{background:#1cc88a;color:white;margin-top:20px;}
 </style>
@@ -100,9 +90,7 @@ const client=supabase.createClient(supabaseUrl,supabaseKey);
 let allStudents=[];
 
 async function fetchStudents(){
-  const {data}=await client.from("students")
-  .select("*")
-  .order("id");
+  const {data}=await client.from("students").select("*").order("id");
   allStudents=data;
   displayStudents(data);
 }
@@ -112,25 +100,19 @@ function displayStudents(students){
   students.forEach(s=>{
     const div=document.createElement("div");
     div.className="card";
-
     div.innerHTML=`
       <div class="hst">${s.hst_number}</div>
-
       <div class="photo">
         ${s.photo_url ? `<img src="${s.photo_url}">` : "+"}
       </div>
-
       <h3>${s.name}</h3>
       <p>Class: ${s.class}</p>
       <p>Room: ${s.room_no}</p>
-      <p>Parent: ${s.parent_name}</p>
       <p>Parent1: ${s.parent_phone1}</p>
       <p>Parent2: ${s.parent_phone2}</p>
       <p>Student: ${s.student_phone}</p>
-
       <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url||""}')">Delete</button>
     `;
-
     container.appendChild(div);
   });
 }
@@ -157,5 +139,6 @@ async function deleteStudent(id,photoUrl){
 
 fetchStudents();
 </script>
+
 </body>
 </html>
