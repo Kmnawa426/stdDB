@@ -1,178 +1,168 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Students List</title>
+  <title>Students</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      padding: 30px;
-      color: white;
+    body{
+      margin:0;
+      font-family:Arial;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      padding:20px;
+      color:white;
     }
-
-    h2 { text-align: center; }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 25px;
-      margin-top: 30px;
+    h2{text-align:center;}
+    input{
+      display:block;
+      margin:15px auto;
+      padding:8px;
+      width:300px;
     }
-
-    .student-card {
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(12px);
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-      text-align: center;
-      position: relative;
+    .container{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
     }
-
-    .photo-box {
-      width: 110px;
-      height: 110px;
-      margin: 0 auto 15px auto;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-      font-size: 40px;
-      cursor: pointer;
+    .card{
+      background:white;
+      color:black;
+      padding:15px;
+      border-radius:10px;
+      text-align:center;
+      position:relative;
     }
-
-    .photo-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .photo{
+      width:100px;
+      height:100px;
+      border-radius:50%;
+      overflow:hidden;
+      margin:auto;
+      background:#ddd;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:40px;
+      cursor:pointer;
     }
-
-    .edit-icon {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      cursor: pointer;
-      font-size: 16px;
-      background: white;
-      color: black;
-      padding: 5px 8px;
-      border-radius: 50%;
+    .photo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
     }
-
-    .delete-btn, .nav-btn {
-      margin-top: 10px;
-      padding: 8px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      width: 100%;
+    .edit{
+      position:absolute;
+      top:10px;
+      right:10px;
+      cursor:pointer;
+      background:black;
+      color:white;
+      padding:5px 8px;
+      border-radius:50%;
     }
-
-    .delete-btn { background: #e74a3b; color: white; }
-    .nav-btn { background: #1cc88a; color: white; }
+    button{
+      margin-top:8px;
+      padding:6px;
+      width:100%;
+      cursor:pointer;
+      border:none;
+      border-radius:6px;
+    }
+    .delete{background:#e74a3b;color:white;}
+    .nav{background:#1cc88a;color:white;margin-top:20px;}
   </style>
 </head>
 <body>
 
 <h2>Students List</h2>
 
-<div class="container" id="studentsContainer"></div>
+<input id="search" placeholder="Search by Name or Room No" onkeyup="searchStudents()">
 
-<button class="nav-btn" onclick="goToAdd()">Go To Add Student</button>
+<div class="container" id="container"></div>
+
+<button class="nav" onclick="location.href='index.html'">Add Student</button>
 
 <script>
-const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
-const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseUrl="https://nqobmiqnwdldranpyxsl.supabase.co";
+const supabaseKey="sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
+const client=supabase.createClient(supabaseUrl,supabaseKey);
+
+let allStudents=[];
 
 async function fetchStudents(){
-  const { data } = await client
-    .from("students")
-    .select("*")
-    .order("created_at", { ascending: true });
+  const {data}=await client.from("students").select("*").order("created_at");
+  allStudents=data;
+  displayStudents(data);
+}
 
-  const container = document.getElementById("studentsContainer");
-  container.innerHTML = "";
+function displayStudents(students){
+  container.innerHTML="";
+  students.forEach(s=>{
+    const div=document.createElement("div");
+    div.className="card";
 
-  data.forEach(student => {
-
-    const div = document.createElement("div");
-    div.className = "student-card";
-
-    let photoSection = "";
-
-    if(student.photo_url){
-      photoSection = `
-        <div class="photo-box">
-          <img src="${student.photo_url}">
-        </div>
-        <div class="edit-icon" onclick="triggerUpload(${student.id})">✏</div>
+    let photoSection="";
+    if(s.photo_url){
+      photoSection=`
+        <div class="photo"><img src="${s.photo_url}"></div>
+        <div class="edit" onclick="triggerUpload(${s.id})">✏</div>
       `;
-    } else {
-      photoSection = `
-        <div class="photo-box" onclick="triggerUpload(${student.id})">
-          +
-        </div>
+    }else{
+      photoSection=`
+        <div class="photo" onclick="triggerUpload(${s.id})">+</div>
       `;
     }
 
-    div.innerHTML = `
+    div.innerHTML=`
       ${photoSection}
-      <h3>${student.name}</h3>
-      <p><b>Room:</b> ${student.room_no}</p>
-      <p><b>Contact:</b> ${student.parent_phone1}</p>
-      <button class="delete-btn" onclick="deleteStudent(${student.id})">Delete</button>
-      <input type="file"
-             id="file-${student.id}"
-             style="display:none"
-             accept="image/*"
-             onchange="uploadImage(event, ${student.id})">
+      <h3>${s.name}</h3>
+      <p>Room: ${s.room_no}</p>
+      <p>Contact: ${s.parent_phone1}</p>
+      <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url || ""}')">Delete</button>
+      <input type="file" id="file-${s.id}" style="display:none" onchange="uploadImage(event,${s.id})">
     `;
-
     container.appendChild(div);
   });
 }
 
-window.triggerUpload = function(id){
-  document.getElementById("file-" + id).click();
+function searchStudents(){
+  const q=search.value.toLowerCase();
+  const filtered=allStudents.filter(s=>
+    s.name.toLowerCase().includes(q)||
+    s.room_no.toLowerCase().includes(q)
+  );
+  displayStudents(filtered);
 }
 
-window.uploadImage = async function(event, studentId){
-  const file = event.target.files[0];
-  if(!file) return;
+function triggerUpload(id){
+  document.getElementById("file-"+id).click();
+}
 
-  const fileName = `student-${studentId}-${Date.now()}.jpg`;
+async function uploadImage(e,id){
+  const file=e.target.files[0];
+  if(!file)return;
 
-  await client.storage
-    .from("student-photos")
-    .upload(fileName, file);
+  const fileName=`student-${id}-${Date.now()}.jpg`;
 
-  const { data } = client.storage
-    .from("student-photos")
-    .getPublicUrl(fileName);
+  await client.storage.from("student-photos").upload(fileName,file);
 
-  await client
-    .from("students")
-    .update({ photo_url: data.publicUrl })
-    .eq("id", studentId);
+  const {data}=client.storage.from("student-photos").getPublicUrl(fileName);
+
+  await client.from("students")
+    .update({photo_url:data.publicUrl})
+    .eq("id",id);
 
   fetchStudents();
 }
 
-window.deleteStudent = async function(id){
+async function deleteStudent(id,photoUrl){
   if(confirm("Delete this student?")){
-    await client.from("students").delete().eq("id", id);
+    if(photoUrl){
+      const path=photoUrl.split("/student-photos/")[1];
+      await client.storage.from("student-photos").remove([path]);
+    }
+    await client.from("students").delete().eq("id",id);
     fetchStudents();
   }
-}
-
-window.goToAdd = function(){
-  window.location.href = "index.html";
 }
 
 fetchStudents();
