@@ -7,10 +7,9 @@
 
 <style>
 *{box-sizing:border-box;}
-
 body{
   margin:0;
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   background:linear-gradient(135deg,#4e73df,#1cc88a);
   display:flex;
   justify-content:center;
@@ -18,7 +17,6 @@ body{
   min-height:100vh;
   padding:15px;
 }
-
 .card{
   background:white;
   width:100%;
@@ -27,9 +25,7 @@ body{
   border-radius:15px;
   box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
-
 h2{text-align:center;}
-
 input{
   width:100%;
   padding:12px;
@@ -38,7 +34,6 @@ input{
   border:1px solid #ccc;
   font-size:16px;
 }
-
 button{
   width:100%;
   padding:14px;
@@ -49,7 +44,6 @@ button{
   cursor:pointer;
   margin-top:10px;
 }
-
 .add{background:#f6c23e;}
 .view{background:#36b9cc;color:white;}
 </style>
@@ -71,7 +65,7 @@ button{
 
 <input type="file" id="photo">
 
-<button class="add" onclick="addStudent()">Add Student</button>
+<button class="add" id="addBtn">Add Student</button>
 <button class="view" onclick="location.href='view-students.html'">View Students</button>
 </div>
 
@@ -118,7 +112,7 @@ async function generateHST(){
   return "HST"+String(next).padStart(3,"0");
 }
 
-window.addStudent=async function(){
+document.getElementById("addBtn").addEventListener("click", async function(){
 
   const p1=parent_phone1.value.trim();
   const p2=parent_phone2.value.trim();
@@ -166,7 +160,8 @@ window.addStudent=async function(){
 
   alert("Student Added Successfully!");
   document.querySelectorAll("input").forEach(i=>i.value="");
-};
+});
 </script>
+
 </body>
 </html>
