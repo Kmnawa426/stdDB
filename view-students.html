@@ -3,8 +3,8 @@
 <head>
   <title>Students List</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
 
+  <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -28,11 +28,6 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .top-btn:hover {
-      background: #169b6b;
     }
 
     .container {
@@ -54,7 +49,7 @@
       transform: translateY(-5px);
     }
 
-    .student-card img {
+    img {
       width: 100px;
       height: 100px;
       border-radius: 50%;
@@ -62,16 +57,6 @@
       display: block;
       margin: 0 auto 10px auto;
       border: 3px solid white;
-    }
-
-    .student-card h3 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .student-card p {
-      font-size: 13px;
-      margin: 4px 0;
     }
 
     .delete-btn {
@@ -83,13 +68,7 @@
       background: #e74a3b;
       color: white;
       cursor: pointer;
-      transition: 0.3s;
     }
-
-    .delete-btn:hover {
-      background: #c0392b;
-    }
-
   </style>
 </head>
 <body>
@@ -131,14 +110,14 @@ async function fetchStudents(){
   });
 }
 
-async function deleteStudent(id){
+window.deleteStudent = async function(id){
   if(confirm("Delete this student?")){
     await client.from("students").delete().eq("id", id);
     fetchStudents();
   }
 }
 
-function goBack(){
+window.goBack = function(){
   window.location.href = "index.html";
 }
 
@@ -147,4 +126,3 @@ fetchStudents();
 
 </body>
 </html>
-
