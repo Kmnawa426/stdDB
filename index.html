@@ -54,18 +54,18 @@ button{
 <div class="card">
 <h2>Add Student</h2>
 
-<input id="name" placeholder="Student Name" required>
-<input id="class" placeholder="Class" required>
-<input id="room_no" placeholder="Room No" required>
-<input id="parent_name" placeholder="Parent Name" required>
+<input id="name" placeholder="Student Name">
+<input id="class" placeholder="Class">
+<input id="room_no" placeholder="Room No">
+<input id="parent_name" placeholder="Parent Name">
 
-<input id="parent_phone1" placeholder="Parent Phone 1 (10 digits)" maxlength="10" required>
-<input id="parent_phone2" placeholder="Parent Phone 2 (10 digits)" maxlength="10" required>
-<input id="student_phone" placeholder="Student Phone (10 digits)" maxlength="10" required>
+<input id="parent_phone1" placeholder="Parent Phone 1 (10 digits)" maxlength="10">
+<input id="parent_phone2" placeholder="Parent Phone 2 (10 digits)" maxlength="10">
+<input id="student_phone" placeholder="Student Phone (10 digits)" maxlength="10">
 
 <input type="file" id="photo">
 
-<button class="add" id="addBtn">Add Student</button>
+<button id="addBtn" class="add">Add Student</button>
 <button class="view" onclick="location.href='view-students.html'">View Students</button>
 </div>
 
@@ -101,12 +101,12 @@ async function compressImage(file){
 
 async function generateHST(){
   const {data}=await client.from("students")
-  .select("hst_number")
-  .order("id",{ascending:false})
-  .limit(1);
+    .select("hst_number")
+    .order("id",{ascending:false})
+    .limit(1);
 
   let next=1;
-  if(data.length>0){
+  if(data && data.length>0){
     next=parseInt(data[0].hst_number.replace("HST",""))+1;
   }
   return "HST"+String(next).padStart(3,"0");
@@ -137,7 +137,10 @@ document.getElementById("addBtn").addEventListener("click", async function(){
     photo_url:null
   }]).select();
 
-  if(error){alert(error.message);return;}
+  if(error){
+    alert(error.message);
+    return;
+  }
 
   const photoFile=document.getElementById("photo").files[0];
 
@@ -162,6 +165,5 @@ document.getElementById("addBtn").addEventListener("click", async function(){
   document.querySelectorAll("input").forEach(i=>i.value="");
 });
 </script>
-
 </body>
 </html>
