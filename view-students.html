@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>View Students</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .student-card{
+      border:1px solid #ccc;
+      padding:15px;
+      margin:15px;
+      display:inline-block;
+      width:220px;
+      text-align:center;
+      border-radius:10px;
+    }
+    img{
+      width:120px;
+      height:120px;
+      border-radius:50%;
+      object-fit:cover;
+    }
+  </style>
+</head>
+<body>
+
+<h2>All Students</h2>
+<div id="studentsContainer"></div>
+
+<script>
+const supabaseUrl = "https://nqobmiqnwddranpyxsl.supabase.co";
+const supabaseKey = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
+
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function fetchStudents(){
+
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .order("created_at", { ascending: true });
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  const container = document.getElementById("studentsContainer");
+  container.innerHTML = "";
+
+  data.forEach(student => {
+
+    const div = document.createElement("div");
+    div.className = "student-card";
+
+    div.innerHTML = `
+      <img src="${student.photo_url}">
+      <h3>${student.name}</h3>
+      <p>Class: ${student.class}</p>
+      <p>Room: ${student.room_no}</p>
+      <p>Status: ${student.status}</p>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+fetchStudents();
+</script>
+
+</body>
+</html>
