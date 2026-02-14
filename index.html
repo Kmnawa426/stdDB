@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Students</title>
+<title>Add Student</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -10,152 +10,163 @@
 
 body{
   margin:0;
-  font-family:Arial;
-  background:linear-gradient(135deg,#667eea,#764ba2);
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#4e73df,#1cc88a);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
   padding:15px;
-}
-
-h2{text-align:center;color:white;}
-
-#search{
-  width:100%;
-  max-width:400px;
-  margin:15px auto;
-  display:block;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-}
-
-.container{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:15px;
 }
 
 .card{
   background:white;
-  padding:15px;
-  border-radius:12px;
-  position:relative;
-  text-align:center;
-}
-
-.hst{
-  position:absolute;
-  top:10px;
-  right:15px;
-  font-weight:bold;
-  color:#4e73df;
-}
-
-.photo{
-  width:100px;
-  height:100px;
-  border-radius:50%;
-  overflow:hidden;
-  margin:10px auto;
-  background:#ddd;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:40px;
-}
-
-.photo img{
   width:100%;
-  height:100%;
-  object-fit:cover;
+  max-width:420px;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+h2{text-align:center;}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:16px;
 }
 
 button{
-  padding:8px;
   width:100%;
+  padding:14px;
   border:none;
-  border-radius:6px;
-  margin-top:8px;
+  border-radius:8px;
+  font-size:16px;
+  font-weight:bold;
   cursor:pointer;
+  margin-top:10px;
 }
 
-.delete{background:#e74a3b;color:white;}
-.nav{background:#1cc88a;color:white;margin-top:20px;}
+.add{background:#f6c23e;}
+.view{background:#36b9cc;color:white;}
 </style>
 </head>
 
 <body>
 
-<h2>Students List</h2>
+<div class="card">
+<h2>Add Student</h2>
 
-<input id="search" placeholder="Search by Name / HST" onkeyup="searchStudents()">
+<input id="name" placeholder="Student Name" required>
+<input id="class" placeholder="Class" required>
+<input id="room_no" placeholder="Room No" required>
+<input id="parent_name" placeholder="Parent Name" required>
 
-<div class="container" id="container"></div>
+<input id="parent_phone1" placeholder="Parent Phone 1 (10 digits)" maxlength="10" required>
+<input id="parent_phone2" placeholder="Parent Phone 2 (10 digits)" maxlength="10" required>
+<input id="student_phone" placeholder="Student Phone (10 digits)" maxlength="10" required>
 
-<button class="nav" onclick="location.href='index.html'">Add Student</button>
+<input type="file" id="photo">
+
+<button class="add" onclick="addStudent()">Add Student</button>
+<button class="view" onclick="location.href='view-students.html'">View Students</button>
+</div>
 
 <script>
 const supabaseUrl="https://nqobmiqnwdldranpyxsl.supabase.co";
 const supabaseKey="sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client=supabase.createClient(supabaseUrl,supabaseKey);
 
-let allStudents=[];
-
-async function fetchStudents(){
-  const {data}=await client.from("students")
-  .select("*")
-  .order("id");
-  allStudents=data;
-  displayStudents(data);
+function validatePhone(num){
+  return /^[0-9]{10}$/.test(num);
 }
 
-function displayStudents(students){
-  container.innerHTML="";
-  students.forEach(s=>{
-    const div=document.createElement("div");
-    div.className="card";
-
-    div.innerHTML=`
-      <div class="hst">${s.hst_number}</div>
-
-      <div class="photo">
-        ${s.photo_url ? `<img src="${s.photo_url}">` : "+"}
-      </div>
-
-      <h3>${s.name}</h3>
-      <p>Class: ${s.class}</p>
-      <p>Room: ${s.room_no}</p>
-      <p>Parent: ${s.parent_name}</p>
-      <p>Parent1: ${s.parent_phone1}</p>
-      <p>Parent2: ${s.parent_phone2}</p>
-      <p>Student: ${s.student_phone}</p>
-
-      <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url||""}')">Delete</button>
-    `;
-
-    container.appendChild(div);
+async function compressImage(file){
+  return new Promise(resolve=>{
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=e=>{
+      const img=new Image();
+      img.src=e.target.result;
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const ctx=canvas.getContext("2d");
+        const maxWidth=500;
+        const scale=maxWidth/img.width;
+        canvas.width=maxWidth;
+        canvas.height=img.height*scale;
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        canvas.toBlob(blob=>resolve(blob),"image/jpeg",0.7);
+      };
+    };
   });
 }
 
-function searchStudents(){
-  const q=search.value.toLowerCase();
-  const filtered=allStudents.filter(s=>
-    s.name.toLowerCase().includes(q) ||
-    s.hst_number.toLowerCase().includes(q)
-  );
-  displayStudents(filtered);
-}
+async function generateHST(){
+  const {data}=await client.from("students")
+  .select("hst_number")
+  .order("id",{ascending:false})
+  .limit(1);
 
-async function deleteStudent(id,photoUrl){
-  if(confirm("Delete this student?")){
-    if(photoUrl){
-      const path=photoUrl.split("/student-photos/")[1];
-      await client.storage.from("student-photos").remove([path]);
-    }
-    await client.from("students").delete().eq("id",id);
-    fetchStudents();
+  let next=1;
+  if(data.length>0){
+    next=parseInt(data[0].hst_number.replace("HST",""))+1;
   }
+  return "HST"+String(next).padStart(3,"0");
 }
 
-fetchStudents();
+window.addStudent=async function(){
+
+  const p1=parent_phone1.value.trim();
+  const p2=parent_phone2.value.trim();
+  const sp=student_phone.value.trim();
+
+  if(!validatePhone(p1) || !validatePhone(p2) || !validatePhone(sp)){
+    alert("All phone numbers must be exactly 10 digits.");
+    return;
+  }
+
+  const hst=await generateHST();
+
+  const {data,error}=await client.from("students").insert([{
+    hst_number:hst,
+    name:name.value,
+    class:class.value,
+    room_no:room_no.value,
+    parent_name:parent_name.value,
+    parent_phone1:p1,
+    parent_phone2:p2,
+    student_phone:sp,
+    photo_url:null
+  }]).select();
+
+  if(error){alert(error.message);return;}
+
+  const photoFile=document.getElementById("photo").files[0];
+
+  if(photoFile){
+    const compressed=await compressImage(photoFile);
+    const fileName=hst+".jpg";
+
+    await client.storage
+      .from("student-photos")
+      .upload(fileName,compressed,{upsert:true});
+
+    const {data:urlData}=client.storage
+      .from("student-photos")
+      .getPublicUrl(fileName);
+
+    await client.from("students")
+      .update({photo_url:urlData.publicUrl})
+      .eq("id",data[0].id);
+  }
+
+  alert("Student Added Successfully!");
+  document.querySelectorAll("input").forEach(i=>i.value="");
+};
 </script>
 </body>
 </html>
