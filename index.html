@@ -16,7 +16,7 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255,255,255,0.15);
       backdrop-filter: blur(15px);
       padding: 30px;
       border-radius: 20px;
@@ -25,55 +25,33 @@
       color: white;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    h2 { text-align: center; }
 
     input {
       width: 100%;
       padding: 10px;
       margin-bottom: 12px;
-      border: none;
       border-radius: 8px;
+      border: none;
       outline: none;
-      font-size: 14px;
-    }
-
-    input[type="file"] {
-      background: white;
-      padding: 6px;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      border: none;
       border-radius: 8px;
-      font-size: 15px;
+      border: none;
       font-weight: bold;
       cursor: pointer;
       margin-top: 8px;
       transition: 0.3s;
     }
 
-    .add-btn {
-      background: #f6c23e;
-      color: black;
-    }
+    .add-btn { background: #f6c23e; color: black; }
+    .add-btn:hover { background: #dda20a; }
 
-    .add-btn:hover {
-      background: #dda20a;
-    }
-
-    .view-btn {
-      background: #36b9cc;
-      color: white;
-    }
-
-    .view-btn:hover {
-      background: #1f8b99;
-    }
+    .nav-btn { background: #36b9cc; color: white; }
+    .nav-btn:hover { background: #1f8b99; }
   </style>
 </head>
 <body>
@@ -86,13 +64,11 @@
   <input type="text" id="room_no" placeholder="Room No">
   <input type="text" id="address" placeholder="Address">
   <input type="text" id="parent_name" placeholder="Parent Name">
-  <input type="text" id="parent_phone1" placeholder="Parent Phone 1">
-  <input type="text" id="parent_phone2" placeholder="Parent Phone 2">
-  <input type="text" id="student_phone" placeholder="Student Phone">
+  <input type="text" id="parent_phone1" placeholder="Parent Phone">
   <input type="file" id="photo" accept="image/*">
 
   <button class="add-btn" onclick="addStudent()">Add Student</button>
-  <button class="view-btn" onclick="goToView()">View Students</button>
+  <button class="nav-btn" onclick="goToView()">Go To View Students</button>
 </div>
 
 <script>
@@ -100,63 +76,51 @@ const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
 const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Compress image
-function compressImage(file){
-  return new Promise((resolve)=>{
-    const reader = new FileReader();
-    reader.onload = function(event){
-      const img = new Image();
-      img.onload = function(){
-        const canvas = document.createElement("canvas");
-        const maxWidth = 200;
-        const scaleSize = maxWidth / img.width;
-
-        canvas.width = maxWidth;
-        canvas.height = img.height * scaleSize;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        resolve(canvas.toDataURL("image/jpeg", 0.6));
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-// Add student
-window.addStudent = async function() {
+window.addStudent = async function(){
 
   const photoFile = document.getElementById("photo").files[0];
 
   if(!photoFile){
-    alert("Please upload photo!");
-    return;
+    if(!confirm("No image selected. Continue without photo?")) return;
   }
 
-  const photoBase64 = await compressImage(photoFile);
-
-  const { error } = await client.from("students").insert([{
+  const { data, error } = await client.from("students").insert([{
     name: document.getElementById("name").value,
     class: document.getElementById("class").value,
     room_no: document.getElementById("room_no").value,
     address: document.getElementById("address").value,
     parent_name: document.getElementById("parent_name").value,
     parent_phone1: document.getElementById("parent_phone1").value,
-    parent_phone2: document.getElementById("parent_phone2").value,
-    student_phone: document.getElementById("student_phone").value,
-    photo_url: photoBase64,
+    photo_url: null,
     status: "present"
-  }]);
+  }]).select();
 
   if(error){
-    console.log(error);
     alert("Error adding student");
-  } else {
-    alert("Student Added Successfully!");
-    document.querySelectorAll("input").forEach(i=>i.value="");
+    return;
   }
+
+  // Upload image if exists
+  if(photoFile){
+    const studentId = data[0].id;
+    const fileName = `student-${studentId}-${Date.now()}.jpg`;
+
+    await client.storage
+      .from("student-photos")
+      .upload(fileName, photoFile);
+
+    const { data: urlData } = client.storage
+      .from("student-photos")
+      .getPublicUrl(fileName);
+
+    await client
+      .from("students")
+      .update({ photo_url: urlData.publicUrl })
+      .eq("id", studentId);
+  }
+
+  alert("Student Added Successfully!");
+  document.querySelectorAll("input").forEach(i=>i.value="");
 }
 
 window.goToView = function(){
