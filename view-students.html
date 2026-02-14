@@ -1,81 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Students</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body{
-      margin:0;
-      font-family:Arial;
-      background:linear-gradient(135deg,#667eea,#764ba2);
-      padding:20px;
-      color:white;
-    }
-    h2{text-align:center;}
-    input{
-      display:block;
-      margin:15px auto;
-      padding:8px;
-      width:300px;
-    }
-    .container{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:20px;
-    }
-    .card{
-      background:white;
-      color:black;
-      padding:15px;
-      border-radius:10px;
-      text-align:center;
-      position:relative;
-    }
-    .photo{
-      width:100px;
-      height:100px;
-      border-radius:50%;
-      overflow:hidden;
-      margin:auto;
-      background:#ddd;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:40px;
-      cursor:pointer;
-    }
-    .photo img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
-    .edit{
-      position:absolute;
-      top:10px;
-      right:10px;
-      cursor:pointer;
-      background:black;
-      color:white;
-      padding:5px 8px;
-      border-radius:50%;
-    }
-    button{
-      margin-top:8px;
-      padding:6px;
-      width:100%;
-      cursor:pointer;
-      border:none;
-      border-radius:6px;
-    }
-    .delete{background:#e74a3b;color:white;}
-    .nav{background:#1cc88a;color:white;margin-top:20px;}
-  </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Students</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  padding:15px;
+}
+
+h2{text-align:center;color:white;}
+
+#search{
+  width:100%;
+  max-width:400px;
+  margin:15px auto;
+  display:block;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+}
+
+.container{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:15px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  position:relative;
+  text-align:center;
+}
+
+.hst{
+  position:absolute;
+  top:10px;
+  right:15px;
+  font-weight:bold;
+  color:#4e73df;
+}
+
+.photo{
+  width:100px;
+  height:100px;
+  border-radius:50%;
+  overflow:hidden;
+  margin:10px auto;
+  background:#ddd;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:40px;
+}
+
+.photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+button{
+  padding:8px;
+  width:100%;
+  border:none;
+  border-radius:6px;
+  margin-top:8px;
+  cursor:pointer;
+}
+
+.delete{background:#e74a3b;color:white;}
+.nav{background:#1cc88a;color:white;margin-top:20px;}
+</style>
 </head>
+
 <body>
 
 <h2>Students List</h2>
 
-<input id="search" placeholder="Search by Name or Room No" onkeyup="searchStudents()">
+<input id="search" placeholder="Search by Name / HST" onkeyup="searchStudents()">
 
 <div class="container" id="container"></div>
 
@@ -89,7 +100,9 @@ const client=supabase.createClient(supabaseUrl,supabaseKey);
 let allStudents=[];
 
 async function fetchStudents(){
-  const {data}=await client.from("students").select("*").order("created_at");
+  const {data}=await client.from("students")
+  .select("*")
+  .order("id");
   allStudents=data;
   displayStudents(data);
 }
@@ -100,26 +113,24 @@ function displayStudents(students){
     const div=document.createElement("div");
     div.className="card";
 
-    let photoSection="";
-    if(s.photo_url){
-      photoSection=`
-        <div class="photo"><img src="${s.photo_url}"></div>
-        <div class="edit" onclick="triggerUpload(${s.id})">✏</div>
-      `;
-    }else{
-      photoSection=`
-        <div class="photo" onclick="triggerUpload(${s.id})">+</div>
-      `;
-    }
-
     div.innerHTML=`
-      ${photoSection}
+      <div class="hst">${s.hst_number}</div>
+
+      <div class="photo">
+        ${s.photo_url ? `<img src="${s.photo_url}">` : "+"}
+      </div>
+
       <h3>${s.name}</h3>
+      <p>Class: ${s.class}</p>
       <p>Room: ${s.room_no}</p>
-      <p>Contact: ${s.parent_phone1}</p>
-      <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url || ""}')">Delete</button>
-      <input type="file" id="file-${s.id}" style="display:none" onchange="uploadImage(event,${s.id})">
+      <p>Parent: ${s.parent_name}</p>
+      <p>Parent1: ${s.parent_phone1}</p>
+      <p>Parent2: ${s.parent_phone2}</p>
+      <p>Student: ${s.student_phone}</p>
+
+      <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url||""}')">Delete</button>
     `;
+
     container.appendChild(div);
   });
 }
@@ -127,31 +138,10 @@ function displayStudents(students){
 function searchStudents(){
   const q=search.value.toLowerCase();
   const filtered=allStudents.filter(s=>
-    s.name.toLowerCase().includes(q)||
-    s.room_no.toLowerCase().includes(q)
+    s.name.toLowerCase().includes(q) ||
+    s.hst_number.toLowerCase().includes(q)
   );
   displayStudents(filtered);
-}
-
-function triggerUpload(id){
-  document.getElementById("file-"+id).click();
-}
-
-async function uploadImage(e,id){
-  const file=e.target.files[0];
-  if(!file)return;
-
-  const fileName=`student-${id}-${Date.now()}.jpg`;
-
-  await client.storage.from("student-photos").upload(fileName,file);
-
-  const {data}=client.storage.from("student-photos").getPublicUrl(fileName);
-
-  await client.from("students")
-    .update({photo_url:data.publicUrl})
-    .eq("id",id);
-
-  fetchStudents();
 }
 
 async function deleteStudent(id,photoUrl){
@@ -167,6 +157,5 @@ async function deleteStudent(id,photoUrl){
 
 fetchStudents();
 </script>
-
 </body>
 </html>
