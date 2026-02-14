@@ -61,6 +61,7 @@ const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
 const supabaseKey = "sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
+// compress image
 async function compressImage(file){
   return new Promise(resolve=>{
     const reader=new FileReader();
@@ -82,50 +83,66 @@ async function compressImage(file){
   });
 }
 
+// VERY IMPORTANT: attach to window
 window.addStudent = async function(){
 
-  const photoFile=document.getElementById("photo").files[0];
+  const nameVal = document.getElementById("name").value;
+  const classVal = document.getElementById("class").value;
+  const roomVal = document.getElementById("room_no").value;
+  const addressVal = document.getElementById("address").value;
+  const parentVal = document.getElementById("parent_name").value;
+  const phoneVal = document.getElementById("parent_phone1").value;
+
+  const photoFile = document.getElementById("photo").files[0];
 
   if(!photoFile){
     if(!confirm("No image selected. Continue without photo?")) return;
   }
 
-  const {data,error}=await client.from("students").insert([{
-    name:name.value,
-    class:class.value,
-    room_no:room_no.value,
-    address:address.value,
-    parent_name:parent_name.value,
-    parent_phone1:parent_phone1.value,
-    photo_url:null,
-    status:"present"
+  const {data,error} = await client.from("students").insert([{
+    name: nameVal,
+    class: classVal,
+    room_no: roomVal,
+    address: addressVal,
+    parent_name: parentVal,
+    parent_phone1: phoneVal,
+    photo_url: null,
+    status: "present"
   }]).select();
 
-  if(error){alert(error.message);return;}
+  if(error){
+    alert(error.message);
+    return;
+  }
 
   if(photoFile){
-    const compressed=await compressImage(photoFile);
-    const fileName=`student-${data[0].id}-${Date.now()}.jpg`;
+    const compressed = await compressImage(photoFile);
+    const fileName = `student-${data[0].id}-${Date.now()}.jpg`;
 
-    const {error:uploadError}=await client.storage
+    const {error:uploadError} = await client.storage
       .from("student-photos")
-      .upload(fileName,compressed);
+      .upload(fileName, compressed);
 
-    if(uploadError){alert(uploadError.message);return;}
+    if(uploadError){
+      alert(uploadError.message);
+      return;
+    }
 
-    const {data:urlData}=client.storage
+    const {data:urlData} = client.storage
       .from("student-photos")
       .getPublicUrl(fileName);
 
     await client.from("students")
-      .update({photo_url:urlData.publicUrl})
-      .eq("id",data[0].id);
+      .update({photo_url: urlData.publicUrl})
+      .eq("id", data[0].id);
   }
 
   alert("Student Added Successfully!");
   document.querySelectorAll("input").forEach(i=>i.value="");
-}
+};
 </script>
+
 
 </body>
 </html>
+
