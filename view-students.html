@@ -76,7 +76,7 @@ button{
 
 <h2>Students List</h2>
 
-<input id="search" placeholder="Search by Name / HST" onkeyup="searchStudents()">
+<input id="search" placeholder="Search by Name or HST">
 
 <div class="container" id="container"></div>
 
@@ -91,46 +91,58 @@ let allStudents=[];
 
 async function fetchStudents(){
   const {data}=await client.from("students").select("*").order("id");
-  allStudents=data;
-  displayStudents(data);
+  allStudents=data || [];
+  displayStudents(allStudents);
 }
 
 function displayStudents(students){
+  const container=document.getElementById("container");
   container.innerHTML="";
-  students.forEach(s=>{
+
+  students.forEach(function(s){
+
     const div=document.createElement("div");
     div.className="card";
-    div.innerHTML=`
-      <div class="hst">${s.hst_number}</div>
-      <div class="photo">
-        ${s.photo_url ? `<img src="${s.photo_url}">` : "+"}
-      </div>
-      <h3>${s.name}</h3>
-      <p>Class: ${s.class}</p>
-      <p>Room: ${s.room_no}</p>
-      <p>Parent1: ${s.parent_phone1}</p>
-      <p>Parent2: ${s.parent_phone2}</p>
-      <p>Student: ${s.student_phone}</p>
-      <button class="delete" onclick="deleteStudent(${s.id},'${s.photo_url||""}')">Delete</button>
-    `;
+
+    const imgSection = s.photo_url
+      ? '<img src="'+s.photo_url+'">'
+      : '+';
+
+    div.innerHTML=
+      '<div class="hst">'+s.hst_number+'</div>'+
+      '<div class="photo">'+imgSection+'</div>'+
+      '<h3>'+s.name+'</h3>'+
+      '<p>Class: '+s.class+'</p>'+
+      '<p>Room: '+s.room_no+'</p>'+
+      '<p>Parent1: '+s.parent_phone1+'</p>'+
+      '<p>Parent2: '+s.parent_phone2+'</p>'+
+      '<p>Student: '+s.student_phone+'</p>'+
+      '<button class="delete">Delete</button>';
+
+    div.querySelector(".delete").addEventListener("click", function(){
+      deleteStudent(s.id, s.photo_url);
+    });
+
     container.appendChild(div);
   });
 }
 
-function searchStudents(){
-  const q=search.value.toLowerCase();
-  const filtered=allStudents.filter(s=>
-    s.name.toLowerCase().includes(q) ||
-    s.hst_number.toLowerCase().includes(q)
-  );
+document.getElementById("search").addEventListener("input", function(){
+  const q=this.value.toLowerCase();
+  const filtered=allStudents.filter(function(s){
+    return s.name.toLowerCase().includes(q) ||
+           s.hst_number.toLowerCase().includes(q);
+  });
   displayStudents(filtered);
-}
+});
 
 async function deleteStudent(id,photoUrl){
   if(confirm("Delete this student?")){
     if(photoUrl){
-      const path=photoUrl.split("/student-photos/")[1];
-      await client.storage.from("student-photos").remove([path]);
+      const parts=photoUrl.split("/student-photos/");
+      if(parts.length>1){
+        await client.storage.from("student-photos").remove([parts[1]]);
+      }
     }
     await client.from("students").delete().eq("id",id);
     fetchStudents();
@@ -139,6 +151,5 @@ async function deleteStudent(id,photoUrl){
 
 fetchStudents();
 </script>
-
 </body>
 </html>
