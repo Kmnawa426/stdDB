@@ -70,100 +70,112 @@ button{
 </div>
 
 <script>
-const supabaseUrl="https://nqobmiqnwdldranpyxsl.supabase.co";
-const supabaseKey="sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
-const client=supabase.createClient(supabaseUrl,supabaseKey);
+var supabaseUrl="https://nqobmiqnwdldranpyxsl.supabase.co";
+var supabaseKey="sb_publishable_eQReGHybx0Oj9G65eqWn-w_x_OjsbWB";
+var client=supabase.createClient(supabaseUrl,supabaseKey);
 
 function validatePhone(num){
-  return /^[0-9]{10}$/.test(num);
+  var regex=/^[0-9]{10}$/;
+  return regex.test(num);
 }
 
 async function compressImage(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
+  return new Promise(function(resolve){
+    var reader=new FileReader();
     reader.readAsDataURL(file);
-    reader.onload=e=>{
-      const img=new Image();
+    reader.onload=function(e){
+      var img=new Image();
       img.src=e.target.result;
-      img.onload=()=>{
-        const canvas=document.createElement("canvas");
-        const ctx=canvas.getContext("2d");
-        const maxWidth=500;
-        const scale=maxWidth/img.width;
+      img.onload=function(){
+        var canvas=document.createElement("canvas");
+        var ctx=canvas.getContext("2d");
+        var maxWidth=500;
+        var scale=maxWidth/img.width;
         canvas.width=maxWidth;
         canvas.height=img.height*scale;
         ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        canvas.toBlob(blob=>resolve(blob),"image/jpeg",0.7);
+        canvas.toBlob(function(blob){
+          resolve(blob);
+        },"image/jpeg",0.7);
       };
     };
   });
 }
 
 async function generateHST(){
-  const {data}=await client.from("students")
+  var response=await client.from("students")
     .select("hst_number")
     .order("id",{ascending:false})
     .limit(1);
 
-  let next=1;
+  var data=response.data;
+  var next=1;
+
   if(data && data.length>0){
     next=parseInt(data[0].hst_number.replace("HST",""))+1;
   }
-  return "HST"+String(next).padStart(3,"0");
+
+  return "HST"+("000"+next).slice(-3);
 }
 
-document.getElementById("addBtn").addEventListener("click", async function(){
+document.getElementById("addBtn").addEventListener("click",async function(){
 
-  const p1=parent_phone1.value.trim();
-  const p2=parent_phone2.value.trim();
-  const sp=student_phone.value.trim();
+  var p1=document.getElementById("parent_phone1").value.trim();
+  var p2=document.getElementById("parent_phone2").value.trim();
+  var sp=document.getElementById("student_phone").value.trim();
 
   if(!validatePhone(p1) || !validatePhone(p2) || !validatePhone(sp)){
     alert("All phone numbers must be exactly 10 digits.");
     return;
   }
 
-  const hst=await generateHST();
+  var hst=await generateHST();
 
-  const {data,error}=await client.from("students").insert([{
+  var insertResponse=await client.from("students").insert([{
     hst_number:hst,
-    name:name.value,
-    class:class.value,
-    room_no:room_no.value,
-    parent_name:parent_name.value,
+    name:document.getElementById("name").value,
+    class:document.getElementById("class").value,
+    room_no:document.getElementById("room_no").value,
+    parent_name:document.getElementById("parent_name").value,
     parent_phone1:p1,
     parent_phone2:p2,
     student_phone:sp,
     photo_url:null
   }]).select();
 
-  if(error){
-    alert(error.message);
+  if(insertResponse.error){
+    alert(insertResponse.error.message);
     return;
   }
 
-  const photoFile=document.getElementById("photo").files[0];
+  var photoFile=document.getElementById("photo").files[0];
 
   if(photoFile){
-    const compressed=await compressImage(photoFile);
-    const fileName=hst+".jpg";
+    var compressed=await compressImage(photoFile);
+    var fileName=hst+".jpg";
 
     await client.storage
       .from("student-photos")
       .upload(fileName,compressed,{upsert:true});
 
-    const {data:urlData}=client.storage
+    var urlResponse=client.storage
       .from("student-photos")
       .getPublicUrl(fileName);
 
+    var urlData=urlResponse.data;
+
     await client.from("students")
       .update({photo_url:urlData.publicUrl})
-      .eq("id",data[0].id);
+      .eq("id",insertResponse.data[0].id);
   }
 
   alert("Student Added Successfully!");
-  document.querySelectorAll("input").forEach(i=>i.value="");
+  var inputs=document.querySelectorAll("input");
+  for(var i=0;i<inputs.length;i++){
+    inputs[i].value="";
+  }
 });
 </script>
+
 </body>
 </html>
