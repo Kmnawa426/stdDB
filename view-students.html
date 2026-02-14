@@ -4,14 +4,15 @@
   <title>View Students</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
+    body { font-family: Arial; text-align:center; }
     .student-card{
       border:1px solid #ccc;
       padding:15px;
       margin:15px;
       display:inline-block;
       width:220px;
-      text-align:center;
       border-radius:10px;
+      box-shadow:0 4px 8px rgba(0,0,0,0.1);
     }
     img{
       width:120px;
@@ -19,28 +20,33 @@
       border-radius:50%;
       object-fit:cover;
     }
+    button { padding:8px 15px; margin:10px; cursor:pointer; }
   </style>
 </head>
 <body>
 
 <h2>All Students</h2>
+
+<button onclick="goBack()">Add New Student</button>
+
 <div id="studentsContainer"></div>
 
 <script>
 const supabaseUrl = "https://nqobmiqnwddranpyxsl.supabase.co";
 const supabaseKey = "PASTE_YOUR_PUBLISHABLE_KEY_HERE";
 
-const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 async function fetchStudents(){
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from("students")
     .select("*")
     .order("created_at", { ascending: true });
 
   if(error){
     console.log(error);
+    alert("Error loading students");
     return;
   }
 
@@ -62,6 +68,10 @@ async function fetchStudents(){
 
     container.appendChild(div);
   });
+}
+
+function goBack(){
+  window.location.href = "index.html";
 }
 
 fetchStudents();
