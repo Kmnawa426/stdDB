@@ -122,6 +122,7 @@ function displayStudents(students){
       '<button class="delete">Delete</button>';
 
     (function(student){
+
       div.querySelector(".delete").addEventListener("click",function(){
         deleteStudent(student.id,student.photo_url);
       });
@@ -161,17 +162,29 @@ async function changePicture(student){
 
     var fileName=student.hst_number+".jpg";
 
+    // 🔥 DELETE OLD FILE FIRST
     await client.storage
       .from("student-photos")
-      .upload(fileName,file,{upsert:true});
+      .remove([fileName]);
 
+    // 🔥 UPLOAD NEW FILE
+    var uploadResponse=await client.storage
+      .from("student-photos")
+      .upload(fileName,file);
+
+    if(uploadResponse.error){
+      alert(uploadResponse.error.message);
+      return;
+    }
+
+    // 🔥 GET PUBLIC URL
     var urlResponse=client.storage
       .from("student-photos")
       .getPublicUrl(fileName);
 
     var urlData=urlResponse.data;
 
-    // 🔥 CACHE FIX
+    // 🔥 CACHE BREAK
     var newUrl=urlData.publicUrl+"?t="+new Date().getTime();
 
     await client.from("students")
