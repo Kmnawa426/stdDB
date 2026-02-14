@@ -171,8 +171,11 @@ async function changePicture(student){
 
     var urlData=urlResponse.data;
 
+    // 🔥 CACHE FIX
+    var newUrl=urlData.publicUrl+"?t="+new Date().getTime();
+
     await client.from("students")
-      .update({photo_url:urlData.publicUrl})
+      .update({photo_url:newUrl})
       .eq("id",student.id);
 
     fetchStudents();
