@@ -13,14 +13,12 @@
       color: white;
     }
 
-    h2 {
-      text-align: center;
-    }
+    h2 { text-align: center; }
 
     .container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+      gap: 25px;
       margin-top: 30px;
     }
 
@@ -31,21 +29,21 @@
       border-radius: 15px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.2);
       text-align: center;
+      position: relative;
     }
 
     .photo-box {
-      width: 100px;
-      height: 100px;
-      margin: 0 auto 10px auto;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 15px auto;
       border-radius: 50%;
       background: rgba(255,255,255,0.3);
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      cursor: pointer;
       font-size: 40px;
-      font-weight: bold;
+      cursor: pointer;
     }
 
     .photo-box img {
@@ -54,16 +52,29 @@
       object-fit: cover;
     }
 
-    .delete-btn {
+    .edit-icon {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      cursor: pointer;
+      font-size: 16px;
+      background: white;
+      color: black;
+      padding: 5px 8px;
+      border-radius: 50%;
+    }
+
+    .delete-btn, .nav-btn {
       margin-top: 10px;
       padding: 8px;
-      border: none;
       border-radius: 8px;
-      background: #e74a3b;
-      color: white;
+      border: none;
       cursor: pointer;
       width: 100%;
     }
+
+    .delete-btn { background: #e74a3b; color: white; }
+    .nav-btn { background: #1cc88a; color: white; }
   </style>
 </head>
 <body>
@@ -71,6 +82,8 @@
 <h2>Students List</h2>
 
 <div class="container" id="studentsContainer"></div>
+
+<button class="nav-btn" onclick="goToAdd()">Go To Add Student</button>
 
 <script>
 const supabaseUrl = "https://nqobmiqnwdldranpyxsl.supabase.co";
@@ -91,21 +104,32 @@ async function fetchStudents(){
     const div = document.createElement("div");
     div.className = "student-card";
 
-    const photoHTML = student.photo_url
-      ? `<img src="${student.photo_url}">`
-      : `+`;
+    let photoSection = "";
+
+    if(student.photo_url){
+      photoSection = `
+        <div class="photo-box">
+          <img src="${student.photo_url}">
+        </div>
+        <div class="edit-icon" onclick="triggerUpload(${student.id})">✏</div>
+      `;
+    } else {
+      photoSection = `
+        <div class="photo-box" onclick="triggerUpload(${student.id})">
+          +
+        </div>
+      `;
+    }
 
     div.innerHTML = `
-      <div class="photo-box" onclick="triggerUpload(${student.id})">
-        ${photoHTML}
-      </div>
-
+      ${photoSection}
       <h3>${student.name}</h3>
       <p><b>Room:</b> ${student.room_no}</p>
+      <p><b>Contact:</b> ${student.parent_phone1}</p>
       <button class="delete-btn" onclick="deleteStudent(${student.id})">Delete</button>
-
-      <input type="file" id="file-${student.id}" 
-             style="display:none" 
+      <input type="file"
+             id="file-${student.id}"
+             style="display:none"
              accept="image/*"
              onchange="uploadImage(event, ${student.id})">
     `;
@@ -114,26 +138,19 @@ async function fetchStudents(){
   });
 }
 
-// Trigger file input
 window.triggerUpload = function(id){
   document.getElementById("file-" + id).click();
 }
 
-// Upload image to storage
 window.uploadImage = async function(event, studentId){
   const file = event.target.files[0];
   if(!file) return;
 
   const fileName = `student-${studentId}-${Date.now()}.jpg`;
 
-  const { error } = await client.storage
+  await client.storage
     .from("student-photos")
     .upload(fileName, file);
-
-  if(error){
-    alert("Upload failed");
-    return;
-  }
 
   const { data } = client.storage
     .from("student-photos")
@@ -147,12 +164,15 @@ window.uploadImage = async function(event, studentId){
   fetchStudents();
 }
 
-// Delete
 window.deleteStudent = async function(id){
   if(confirm("Delete this student?")){
     await client.from("students").delete().eq("id", id);
     fetchStudents();
   }
+}
+
+window.goToAdd = function(){
+  window.location.href = "index.html";
 }
 
 fetchStudents();
